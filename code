@@ -1,0 +1,39 @@
+!pip install tensorflow keras opencv-python
+import cv2
+import numpy as np
+from keras.applications.vgg16 import preprocess_input, decode_predictions
+from keras.applications import VGG16
+
+# Load the VGG16 model
+vgg_model = VGG16(weights='imagenet', include_top=True)
+
+def preprocess_image(image_path):
+    # Load the image and resize it to the input size required by VGG (224x224)
+    image = cv2.imread(image_path)
+    image = cv2.resize(image, (224, 224))
+
+    # Convert BGR to RGB (OpenCV uses BGR by default)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # Preprocess the image to fit the VGG input format
+    image = preprocess_input(np.expand_dims(image, axis=0))
+    return image
+
+def predict_image_class(image_path):
+    image = preprocess_image(image_path)
+
+    # Use the VGG model to predict the class probabilities for the image
+    predictions = vgg_model.predict(image)
+    decoded_predictions = decode_predictions(predictions, top=3)[0]
+
+    # Print the top 3 predicted classes with their probabilities
+    for prediction in decoded_predictions:
+        print(f"{prediction[1]}: {prediction[2] * 100:.2f}%")
+
+    # Return the predicted class label
+    return decoded_predictions[0][1]
+
+if __name__ == "__main__":
+    image_path = "/content/Cancerous23.jpg"
+    predicted_class = predict_image_class(image_path)
+    print(f"The image is predicted to belong to the class: {predicted_class}")
